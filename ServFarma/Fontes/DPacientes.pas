@@ -28,8 +28,6 @@ type
     procedure GravaTodasTabelas;
     property PosicionaCamposFPacientes: TPosicionaCamposFPacientes
       read FPosicionaCamposFPacientes write SetPosicionaCamposFPacientes;
-    procedure ValidaExistePaciente(vpiCodPaciente: Integer);
-    function ExistePaciente(vpiCodPaciente: Integer): Boolean;
     function Pesquisa(vpsChaveDeBusca: String; vptBtnCadastro: TObject = nil): String;
     { Public declarations }
   end;
@@ -46,6 +44,7 @@ uses
 
 constructor TDmPacientes.Create(AOwner: TComponent);
 begin
+  NomeEntidade := 'Paciente';
   NomeCampoChave := 'CodPaciente';
   inherited Create(AOwner);
 end;
@@ -81,37 +80,6 @@ begin
   if (QryCadastro.State in [dsEdit, dsInsert]) then
     QryCadastro.Post;
   Atualizar;
-end;
-
-procedure TDmPacientes.ValidaExistePaciente(vpiCodPaciente: Integer);
-begin
-  if not (ExistePaciente(vpiCodPaciente)) then
-    raise Exception.Create(
-      'Código do Paciente [' + IntToStr(vpiCodPaciente) + '] inexistente! ');
-end;
-
-function TDmPacientes.ExistePaciente(vpiCodPaciente: Integer): Boolean;
-var
-  vltQryPaciente: TQuery;
-begin
-  vltQryPaciente := TQuery.Create(nil);
-  try
-    with vltQryPaciente do
-    begin
-      Close;
-      Databasename:= DmConexao.DbsConexao.DatabaseName;
-      Sql.Clear;
-      Sql.Add('SELECT *');
-      Sql.Add('FROM Paciente ');
-      Sql.Add('WHERE CODPaciente = :CODPaciente ');
-      ParamByName('CODPaciente').AsInteger := vpiCodPaciente;
-      Open;
-      Result := not IsEmpty;
-    end;
-  finally
-    if Assigned(vltQryPaciente) then
-      vltQryPaciente.Free;
-  end;
 end;
 
 procedure TDmPacientes.SetPosicionaCamposFPacientes(

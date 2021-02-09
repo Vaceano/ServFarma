@@ -29,8 +29,6 @@ type
     procedure GravaTodasTabelas;
     property PosicionaCamposFMedicamentos: TPosicionaCamposFMedicamentos
       read FPosicionaCamposFMedicamentos write SetPosicionaCamposFMedicamentos;
-    procedure ValidaExisteMedicamento(vpiCodMedicamento: Integer);
-    function ExisteMedicamento(vpiCodMedicamento: Integer): Boolean;
     function Pesquisa(vpsChaveDeBusca: String; vptBtnCadastro: TObject = nil): String;
     { Public declarations }
   end;
@@ -41,12 +39,13 @@ var
 implementation
 
 uses
-  UFerramentas, UFerramentasB, DConexao, SPesquisa;
+  UFerramentas, UFerramentasB, DConexao, SPesquisa, DGeral;
 
 {$R *.DFM}
 
 constructor TDmMedicamentos.Create(AOwner: TComponent);
 begin
+  NomeEntidade := 'Medicamento';
   NomeCampoChave := 'CodMedicamento';
   inherited Create(AOwner);
 end;
@@ -82,37 +81,6 @@ begin
   if (QryCadastro.State in [dsEdit, dsInsert]) then
     QryCadastro.Post;
   Atualizar;
-end;
-
-procedure TDmMedicamentos.ValidaExisteMedicamento(vpiCodMedicamento: Integer);
-begin
-  if not (ExisteMedicamento(vpiCodMedicamento)) then
-    raise Exception.Create(
-      'Código do Medicamento [' + IntToStr(vpiCodMedicamento) + '] inexistente! ');
-end;
-
-function TDmMedicamentos.ExisteMedicamento(vpiCodMedicamento: Integer): Boolean;
-var
-  vltQryMedicamento: TQuery;
-begin
-  vltQryMedicamento := TQuery.Create(nil);
-  try
-    with vltQryMedicamento do
-    begin
-      Close;
-      Databasename:= DmConexao.DbsConexao.DatabaseName;
-      Sql.Clear;
-      Sql.Add('SELECT *');
-      Sql.Add('FROM Medicamento ');
-      Sql.Add('WHERE CODMedicamento = :CODMedicamento ');
-      ParamByName('CODMedicamento').AsInteger := vpiCodMedicamento;
-      Open;
-      Result := not IsEmpty;
-    end;
-  finally
-    if Assigned(vltQryMedicamento) then
-      vltQryMedicamento.Free;
-  end;
 end;
 
 procedure TDmMedicamentos.SetPosicionaCamposFMedicamentos(

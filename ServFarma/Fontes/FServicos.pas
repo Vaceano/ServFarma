@@ -71,6 +71,9 @@ type
     procedure BtnRemoveMedicamentoClick(Sender: TObject);
     procedure EdtVlrMedicamentoExit(Sender: TObject);
     procedure StgServicoItemDblClick(Sender: TObject);
+    procedure EdtCodMedicamentoExit(Sender: TObject);
+    procedure EdtCODFARMACEUTICOExit(Sender: TObject);
+    procedure EdtCODPACIENTEExit(Sender: TObject);
   private
     procedure LimpaCamposServicoItem;
     { Private declarations }
@@ -86,7 +89,7 @@ implementation
 
 uses
   DConexao, DServicos, SPesquisa, UFerramentas, UFerramentasB, SDataOpcao,
-  SException, FMenu;
+  SException, FMenu, DGeral;
 
 {$R *.DFM}
 
@@ -345,6 +348,61 @@ begin
     LblIteServico_EmAlteracao.Tag := StrToInt(StgServicoItem.Cells[1,StgServicoItem.Row]);
     BtnAdicionaServicoItem.ShowHint := False;
     BtnRemoveMedicamento.ShowHint := False;
+  end;
+end;
+
+procedure TFrmServicos.EdtCodMedicamentoExit(Sender: TObject);
+begin
+  inherited;
+  try
+    EdtCodMedicamento.Text := TDmGeral(DmlG).DmlMedicamentos.ValidaExisteRegistro(EdtCodMedicamento.Text);
+    if Trim(EdtCodMedicamento.Text) = '' then
+      Exit;
+    EdtDesMedicamento.Text := TDmGeral(DmlG).DmlMedicamentos.QryCadastroDESMEDICAMENTO.AsString;
+    EdtVlrMedicamento.Text := FormatFloat('#,##0.00', TDmGeral(DmlG).DmlMedicamentos.QryCadastroVLRMEDICAMENTO.AsFloat);
+  except
+    on E: Exception do
+    begin
+      if EdtCodMedicamento.CanFocus then
+        EdtCodMedicamento.SetFocus;
+      raise Exception.Create(E.Message);
+    end;
+  end;
+end;
+
+procedure TFrmServicos.EdtCODFARMACEUTICOExit(Sender: TObject);
+begin
+  inherited;
+  try
+    EdtCODFARMACEUTICO.Text := TDmGeral(DmlG).DmlFarmaceuticos.ValidaExisteRegistro(EdtCODFARMACEUTICO.Text);
+    if Trim(EdtCODFARMACEUTICO.Text) = '' then
+      Exit;
+    EdtNOMFARMACEUTICO.Text := TDmGeral(DmlG).DmlFarmaceuticos.QryCadastroNOMFARMACEUTICO.AsString;
+  except
+    on E: Exception do
+    begin
+      if EdtCODFARMACEUTICO.CanFocus then
+        EdtCODFARMACEUTICO.SetFocus;
+      raise Exception.Create(E.Message);
+    end;
+  end;
+end;
+
+procedure TFrmServicos.EdtCODPACIENTEExit(Sender: TObject);
+begin
+  inherited;
+  try
+    EdtCODPACIENTE.Text := TDmGeral(DmlG).DmlPacientes.ValidaExisteRegistro(EdtCODPACIENTE.Text);
+    if Trim(EdtCODPACIENTE.Text) = '' then
+      Exit;
+    EdtNOMPACIENTE.Text := TDmGeral(DmlG).DmlPacientes.QryCadastroNOMPACIENTE.AsString;
+  except
+    on E: Exception do
+    begin
+      if EdtCODPACIENTE.CanFocus then
+        EdtCODPACIENTE.SetFocus;
+      raise Exception.Create(E.Message);
+    end;
   end;
 end;
 

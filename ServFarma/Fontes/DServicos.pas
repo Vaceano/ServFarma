@@ -104,8 +104,6 @@ type
       read FPosicionaCamposFServicos write SetPosicionaCamposFServicos;
     property PosicionaCamposFServicosItem: TPosicionaCamposFServicosItem
       read FPosicionaCamposFServicosItem write SetPosicionaCamposFServicosItem;
-    procedure ValidaExisteServico(vpiCodServico: Integer);
-    function ExisteServico(vpiCodServico: Integer): Boolean;
     procedure PopulaCodFarmaceutico(vpsCod: String);
     procedure PopulaCodPaciente(vpsCod: String);
     procedure EditServico;
@@ -147,12 +145,13 @@ var
 implementation
 
 uses
-  UFerramentas, UFerramentasB, DConexao, SPesquisa;
+  UFerramentas, UFerramentasB, DConexao, SPesquisa, DGeral;
 
 {$R *.DFM}
 
 constructor TDmServicos.Create(AOwner: TComponent);
 begin
+  NomeEntidade := 'Serviço';
   NomeCampoChave := 'CodServico';
   inherited Create(AOwner);
 end;
@@ -164,8 +163,8 @@ begin
 end;
 
 procedure TDmServicos.ListaServicoItemFree;
-var
-  vli1: Integer;
+//var
+//  vli1: Integer;
 begin
   if Assigned(FListaServicoItem) then
   begin
@@ -226,37 +225,6 @@ begin
   if (QryCadastro.State in [dsEdit, dsInsert]) then
     QryCadastro.Post;
   Atualizar;
-end;
-
-procedure TDmServicos.ValidaExisteServico(vpiCodServico: Integer);
-begin
-  if not (ExisteServico(vpiCodServico)) then
-    raise Exception.Create(
-      'Código do Serviço [' + IntToStr(vpiCodServico) + '] inexistente! ');
-end;
-
-function TDmServicos.ExisteServico(vpiCodServico: Integer): Boolean;
-var
-  vltQryServico: TQuery;
-begin
-  vltQryServico := TQuery.Create(nil);
-  try
-    with vltQryServico do
-    begin
-      Close;
-      Databasename:= DmConexao.DbsConexao.DatabaseName;
-      Sql.Clear;
-      Sql.Add('SELECT *');
-      Sql.Add('FROM Servico ');
-      Sql.Add('WHERE CODServico = :CODServico ');
-      ParamByName('CODServico').AsInteger := vpiCodServico;
-      Open;
-      Result := not IsEmpty;
-    end;
-  finally
-    if Assigned(vltQryServico) then
-      vltQryServico.Free;
-  end;
 end;
 
 procedure TDmServicos.SetPosicionaCamposFServicos(
@@ -502,12 +470,14 @@ begin
   case vptPosicionaCamposFServicosItem of
     pcFServicosItemCodMedicamento:
     begin
-      Result := vpsConteudo;
-      Result := DeletaCharAlfanumerico(Result);
-      if not ContemNumeros(Result) then
-      begin
-        PosicionaCamposFServicosItem := vptPosicionaCamposFServicosItem;
-        raise Exception.Create('O código do Medicamento é obrigatório! ');
+      try
+        Result := TDmGeral(DmlG).DmlMedicamentos.ValidaExisteRegistro(vpsConteudo);
+      except
+        on E: Exception do
+        begin
+          PosicionaCamposFServicosItem := vptPosicionaCamposFServicosItem;
+          raise Exception.Create(E.Message);
+        end;
       end;
     end;
     pcFServicosItemVlrMedicamento:
@@ -533,7 +503,7 @@ var
 begin
   vltServicoItem := TServicoItem.Create(ListaServicoItem);
   vltServicoItem.CodMedicamento := StrToInt(ValidaCamposServicoItem(vpsCodMedicamento, pcFServicosItemCodMedicamento));
-  vltServicoItem.DesMedicamento := vpsDesMedicamento;
+  vltServicoItem.DesMedicamento := TDmGeral(DmlG).DmlMedicamentos.QryCadastroDESMEDICAMENTO.AsString;
   vltServicoItem.VlrMedicamento := StrToFloat(ValidaCamposServicoItem(vpsVlrMedicamento, pcFServicosItemVlrMedicamento));
   vltServicoItem.ObsMedicamento := vpsObsMedicamento;
 
@@ -754,7 +724,6 @@ end;
 
 procedure TDmServicos.PopulaListaServicoItem;
 var
-  vli1: Integer;
   vltQry: TQuery;
 begin
   ListaServicoItem.Clear;

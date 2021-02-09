@@ -15,9 +15,11 @@ type
     FDmlG: TDataModule;
     FFormOrigem: TComponent;
     FNomeCampoChave: String;
+    FNomeEntidade: String;
     function GetDmlG: TDataModule;
     procedure SetFormOrigem(const Value: TComponent);
     procedure SetNomeCampoChave(const Value: String);
+    procedure SetNomeEntidade(const Value: String);
     { Private declarations }
   public
     constructor Create(AOwner: TComponent); override;
@@ -25,6 +27,9 @@ type
     property FormOrigem: TComponent read FFormOrigem write SetFormOrigem;
     procedure Atualizar(vpsCod: String = ''); dynamic;
     property NomeCampoChave: String read FNomeCampoChave write SetNomeCampoChave;
+    property NomeEntidade: String read FNomeEntidade write SetNomeEntidade;
+    function ValidaExisteRegistro(vpsCod: String): String;
+    function ExisteRegistro(vpiCod: Integer): Boolean;
     { Public declarations }
   end;
 
@@ -34,7 +39,7 @@ var
 implementation
 
 uses
-  DGeral, UFerramentasB;
+  DGeral, UFerramentasB, UFerramentas;
 
 {$R *.DFM}
 
@@ -92,6 +97,35 @@ end;
 procedure TADmPadrao.SetNomeCampoChave(const Value: String);
 begin
   FNomeCampoChave := Value;
+end;
+
+function TADmPadrao.ValidaExisteRegistro(vpsCod: String): String;
+const
+  clsMsg: String = 'Código ';
+begin
+  if Trim(vpsCod) = '' then
+    Exit;
+
+  Result := vpsCod;
+  Result := DeletaCharAlfanumerico(Result);
+  if Trim(Result) = '' then
+    raise Exception.Create(
+      clsMsg + NomeEntidade + '[' + vpsCod + '] inválido! ');
+
+  Result := IntToStr(StrToIntDef(Result, 0));
+  if not (ExisteRegistro(StrToInt(Result))) then
+    raise Exception.Create(
+      clsMsg + NomeEntidade + '[' + Result + '] inexistente! ');
+end;
+
+function TADmPadrao.ExisteRegistro(vpiCod: Integer): Boolean;
+begin
+  Result := QryCadastro.Locate(NomeCampoChave, vpiCod, [loCaseInsensitive]);
+end;
+
+procedure TADmPadrao.SetNomeEntidade(const Value: String);
+begin
+  FNomeEntidade := Value + ' ';
 end;
 
 end.

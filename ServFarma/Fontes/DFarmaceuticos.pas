@@ -28,8 +28,6 @@ type
     procedure GravaTodasTabelas;
     property PosicionaCamposFFarmaceuticos: TPosicionaCamposFFarmaceuticos
       read FPosicionaCamposFFarmaceuticos write SetPosicionaCamposFFarmaceuticos;
-    procedure ValidaExisteFarmaceutico(vpiCodFarmaceutico: Integer);
-    function ExisteFarmaceutico(vpiCodFarmaceutico: Integer): Boolean;
     function Pesquisa(vpsChaveDeBusca: String; vptBtnCadastro: TObject = nil): String;
     { Public declarations }
   end;
@@ -46,6 +44,7 @@ uses
 
 constructor TDmFarmaceuticos.Create(AOwner: TComponent);
 begin
+  NomeEntidade := 'Farmacêutico';
   NomeCampoChave := 'CodFarmaceutico';
   inherited Create(AOwner);
 end;
@@ -81,37 +80,6 @@ begin
   if (QryCadastro.State in [dsEdit, dsInsert]) then
     QryCadastro.Post;
   Atualizar;
-end;
-
-procedure TDmFarmaceuticos.ValidaExisteFarmaceutico(vpiCodFarmaceutico: Integer);
-begin
-  if not (ExisteFarmaceutico(vpiCodFarmaceutico)) then
-    raise Exception.Create(
-      'Código do Farmacêutico [' + IntToStr(vpiCodFarmaceutico) + '] inexistente! ');
-end;
-
-function TDmFarmaceuticos.ExisteFarmaceutico(vpiCodFarmaceutico: Integer): Boolean;
-var
-  vltQryFarmaceutico: TQuery;
-begin
-  vltQryFarmaceutico := TQuery.Create(nil);
-  try
-    with vltQryFarmaceutico do
-    begin
-      Close;
-      Databasename:= DmConexao.DbsConexao.DatabaseName;
-      Sql.Clear;
-      Sql.Add('SELECT *');
-      Sql.Add('FROM Farmaceutico ');
-      Sql.Add('WHERE CODFarmaceutico = :CODFarmaceutico ');
-      ParamByName('CODFarmaceutico').AsInteger := vpiCodFarmaceutico;
-      Open;
-      Result := not IsEmpty;
-    end;
-  finally
-    if Assigned(vltQryFarmaceutico) then
-      vltQryFarmaceutico.Free;
-  end;
 end;
 
 procedure TDmFarmaceuticos.SetPosicionaCamposFFarmaceuticos(
